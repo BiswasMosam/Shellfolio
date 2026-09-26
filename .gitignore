@@ -1,0 +1,9 @@
+# build output
+/shellfolio
+/shellfolio.exe
+/dist/
+
+# created on first run: the SSH host key and Let's Encrypt certificates.
+# Never commit these.
+/.ssh/
+/certs/
