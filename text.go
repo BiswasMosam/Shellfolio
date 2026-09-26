@@ -39,10 +39,17 @@ var (
 	liveLinks = [][2]string{
 		{"The interactive version", "ssh mosambiswas.com"},
 		{"Without colours", "curl mosambiswas.com/plain"},
+		claimLink,
 	}
 	pageLinks = [][2]string{
 		{"The website", site},
+		claimLink,
 	}
+
+	// Reading this in a terminal is one of the site's easter eggs. The
+	// tracker lives in the browser, so the terminal hands you a link to
+	// claim it (the homepage counts ?curl as found).
+	claimLink = [2]string{"You found an easter egg. Claim it", site + "/?curl"}
 )
 
 // resumeText renders the one page résumé as terminal text, at most width
