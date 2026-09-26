@@ -32,10 +32,23 @@ func newPalette(r *lipgloss.Renderer) palette {
 
 func plain(s ...string) string { return strings.Join(s, " ") }
 
+// The rows under the résumé's closing rule, after the PDF, depending on where
+// it is being read. The live server can point at ssh; the static copy on
+// GitHub Pages cannot until the server exists.
+var (
+	liveLinks = [][2]string{
+		{"The interactive version", "ssh mosambiswas.com"},
+		{"Without colours", "curl mosambiswas.com/plain"},
+	}
+	pageLinks = [][2]string{
+		{"The website", site},
+	}
+)
+
 // resumeText renders the one page résumé as terminal text, at most width
-// columns wide. The same function feeds curl, the SSH résumé tab and SSH
-// sessions that have no terminal attached.
-func resumeText(r *lipgloss.Renderer, width int, invite bool) string {
+// columns wide. The same function feeds curl, the SSH résumé tab, SSH
+// sessions that have no terminal attached, and the static /cv/ page.
+func resumeText(r *lipgloss.Renderer, width int, links [][2]string) string {
 	width = clamp(width, 40, 80)
 	p := newPalette(r)
 	var b strings.Builder
@@ -108,13 +121,7 @@ func resumeText(r *lipgloss.Renderer, width int, invite bool) string {
 	}
 
 	b.WriteString("\n" + in + p.dim.Render(strings.Repeat("─", inner)) + "\n")
-	pairs := [][2]string{{"PDF", pdf}}
-	if invite {
-		pairs = append(pairs,
-			[2]string{"The interactive version", "ssh mosambiswas.com"},
-			[2]string{"Without colours", "curl mosambiswas.com/plain"})
-	}
-	for _, pr := range pairs {
+	for _, pr := range append([][2]string{{"PDF", pdf}}, links...) {
 		row(&b, in, width, p.dim.Render(pr[0]), pr[1], p.accent.Render)
 	}
 	b.WriteString("\n")

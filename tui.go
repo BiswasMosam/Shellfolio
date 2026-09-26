@@ -172,7 +172,7 @@ func (m *model) fill(top bool) {
 	case tabAbout:
 		m.vp.SetContent(m.aboutPage(w))
 	case tabResume:
-		m.vp.SetContent(resumeText(m.r, w, false))
+		m.vp.SetContent(resumeText(m.r, w, nil))
 	case tabContact:
 		m.vp.SetContent(m.contactPage(w))
 	}

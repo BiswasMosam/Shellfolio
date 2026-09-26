@@ -61,6 +61,30 @@ on a thin line of embers.
 
 `wget`, `httpie` and `xh` get the same treatment as `curl`.
 
+### `curl -L mosambiswas.com/cv`, with no server at all
+
+Until this server is running, the same coloured résumé is live on GitHub
+Pages as one static file, `/cv/index.html` in the
+[site repo](https://github.com/BiswasMosam/BiswasMosam.github.io). That one
+file reads right in two places:
+
+```
+ESC ] 9999 ; <!doctype html> … <pre id="cv"> BEL   ← terminals swallow this
+  ███╗   ███╗ ██████╗ …                            ← and print only this
+```
+
+The HTML head sits inside an OSC escape sequence. Terminals drop OSC strings
+they don't recognise without printing them, so `curl` shows only the résumé.
+A browser reads the same bytes as HTML: the head loads a stylesheet that hides
+the raw text and a script that turns the colour codes into styled spans. The
+closing tags are left off on purpose; HTML doesn't need them, and a terminal
+would print them.
+
+`go run . -cv <path>` writes that file (see [`cvpage.go`](cvpage.go)). Its footer
+leaves out `ssh`, which doesn't exist until this server does. A test checks
+that all the markup stays inside the escape sequence, on one line, short
+enough for terminals that cap OSC length.
+
 ### `ssh mosambiswas.com`
 
 A full-screen app with four tabs:
@@ -128,6 +152,7 @@ rather than redirecting, because that is what `curl mosambiswas.com` speaks.
 | [`banner.go`](banner.go) | The five letters of the ANSI Shadow figlet face the name needs, and the colouring that splits blocks from shadow. |
 | [`tui.go`](tui.go) | The Bubble Tea model for the SSH app. |
 | [`web.go`](web.go) | The HTTP handler: terminals get text, everyone else a 301 to www. |
+| [`cvpage.go`](cvpage.go) | Writes the static `/cv/` page: the résumé for terminals with its HTML hidden in an escape sequence. |
 | [`main.go`](main.go) | Starts the three listeners, the SSH middleware, and a clean shutdown. |
 | [`deploy/shellfolio.service`](deploy/shellfolio.service) | systemd unit: runs as its own user with only `CAP_NET_BIND_SERVICE`, can write nothing but its own folder. |
 
@@ -172,6 +197,7 @@ The first run writes an SSH host key to `.ssh/id_ed25519`. It is gitignored.
 | `-hostkey` | `.ssh/id_ed25519` | the SSH host key. **Keep it.** A new one makes every returning visitor's `ssh` warn about a changed key |
 | `-www` | `https://www.mosambiswas.com` | where browsers are sent |
 | `-max-sessions` | `64` | SSH sessions open at once |
+| `-cv` | | write the static `/cv/` page to this path and exit, instead of serving |
 
 ### Tests
 
@@ -260,6 +286,12 @@ does:
   follow the one page B/W résumé.
 - `portfolio` follows the work list on the homepage, including the headline
   number on each project's preview card.
+
+After any change, regenerate the static page and ship it with the site:
+
+```bash
+go run . -cv ../BiswasMosam.github.io/cv/index.html
+```
 
 Numbers stay the ones the résumé states. Nothing here claims more than the
 site does.

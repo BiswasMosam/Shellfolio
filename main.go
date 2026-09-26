@@ -42,8 +42,17 @@ func main() {
 		hostKey   = flag.String("hostkey", ".ssh/id_ed25519", "SSH host key, created on first run. Keep it: a new one makes every returning visitor's ssh complain")
 		www       = flag.String("www", "https://www.mosambiswas.com", "where browsers are redirected")
 		maxConns  = flag.Int("max-sessions", 64, "most SSH sessions open at once")
+		cvOut     = flag.String("cv", "", "write the static /cv/ page (terminal and browser in one file) to this path, then exit")
 	)
 	flag.Parse()
+
+	if *cvOut != "" {
+		if err := writeCV(*cvOut); err != nil {
+			log.Fatal("cv", "err", err)
+		}
+		log.Info("wrote", "path", *cvOut)
+		return
+	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
@@ -180,7 +189,7 @@ func textWithoutTerminal() wish.Middleware {
 			if hasPty {
 				profile = termenv.ANSI256
 			}
-			say(s, resumeText(renderer(profile), 78, true))
+			say(s, resumeText(renderer(profile), 78, liveLinks))
 		}
 	}
 }

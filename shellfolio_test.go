@@ -71,7 +71,7 @@ func TestUnknownTerminalPathIs404(t *testing.T) {
 // visitor's terminal and the layout falls apart.
 func TestResumeFitsItsWidth(t *testing.T) {
 	for _, width := range []int{40, 60, 78} {
-		text := resumeText(renderer(termenv.ANSI256), width, true)
+		text := resumeText(renderer(termenv.ANSI256), width, liveLinks)
 		for i, line := range strings.Split(text, "\n") {
 			if w := ansi.StringWidth(line); w > width {
 				t.Fatalf("width %d, line %d is %d wide: %q", width, i+1, w, ansi.Strip(line))
@@ -105,9 +105,36 @@ func TestAppFitsTheWindow(t *testing.T) {
 	}
 }
 
+// The static /cv/ page has to show a terminal nothing but the résumé: all of
+// the HTML must sit inside one OSC string, which terminals swallow.
+func TestCVPageHidesItsHTMLFromTerminals(t *testing.T) {
+	page := cvPage()
+	if !strings.HasPrefix(page, "\x1b]9999;<!doctype html>") {
+		t.Fatalf("page must open with the OSC and the doctype, got %q", page[:40])
+	}
+	end := strings.IndexByte(page, '\a')
+	if end < 0 {
+		t.Fatal("OSC is never terminated")
+	}
+	head := page[len("\x1b]9999;"):end]
+	if strings.ContainsAny(head, "\n\r\x1b") {
+		t.Fatal("the HTML head must be one line with no control characters, or a terminal ends the OSC early and prints the rest")
+	}
+	if len(head) > 1024 {
+		t.Fatalf("head is %d bytes; keep the OSC short, some terminals cap it", len(head))
+	}
+	shown := page[end+1:]
+	if strings.Contains(shown, "<") {
+		t.Fatal("markup outside the OSC would be printed in the terminal")
+	}
+	if strings.Contains(shown, "ssh mosambiswas.com") {
+		t.Fatal("the static page must not point at ssh before the server exists")
+	}
+}
+
 // Standing rule for everything Mosam publishes: no em or en dashes.
 func TestNoDashesInCopy(t *testing.T) {
-	text := resumeText(renderer(termenv.Ascii), 78, true)
+	text := resumeText(renderer(termenv.Ascii), 78, liveLinks)
 	m := newModel(renderer(termenv.Ascii), func(string) {})
 	text += m.aboutPage(80) + m.contactPage(80)
 	for _, p := range portfolio {

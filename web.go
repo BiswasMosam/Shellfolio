@@ -24,8 +24,8 @@ func isTerminal(r *http.Request) bool {
 func webHandler(www string) http.Handler {
 	// 78, not 80: a line that fills the last column wraps twice on some
 	// Windows consoles.
-	colour := resumeText(renderer(termenv.ANSI256), 78, true)
-	plain := resumeText(renderer(termenv.Ascii), 78, true)
+	colour := resumeText(renderer(termenv.ANSI256), 78, liveLinks)
+	plain := resumeText(renderer(termenv.Ascii), 78, liveLinks)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Vary", "User-Agent")
@@ -37,7 +37,7 @@ func webHandler(www string) http.Handler {
 
 		var body string
 		switch strings.TrimSuffix(r.URL.Path, "/") {
-		case "", "/resume", "/index.html":
+		case "", "/resume", "/index.html", "/cv":
 			body = colour
 		case "/plain", "/resume.txt":
 			body = plain
