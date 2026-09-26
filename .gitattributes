@@ -1,0 +1,3 @@
+# LF everywhere, even in a Windows checkout: the systemd unit gets copied
+# straight to a Linux server, and a stray CR breaks its ExecStart line.
+* text=auto eol=lf
