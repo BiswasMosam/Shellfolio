@@ -127,8 +127,17 @@ func TestCVPageHidesItsHTMLFromTerminals(t *testing.T) {
 	if strings.Contains(shown, "<") {
 		t.Fatal("markup outside the OSC would be printed in the terminal")
 	}
-	if strings.Contains(shown, "ssh mosambiswas.com") {
-		t.Fatal("the static page must not point at ssh before the server exists")
+	if !strings.Contains(shown, "ssh mosambiswas.com") {
+		t.Fatal("the static page should point at the ssh app, now that it is live")
+	}
+}
+
+// The SSH app is an easter egg too; its claim link has to be reachable
+// both inside the app and in the scrollback it leaves behind.
+func TestSSHAppHandsOutItsClaimLink(t *testing.T) {
+	m := newModel(renderer(termenv.Ascii), func(string) {})
+	if !strings.Contains(m.contactPage(80), "/?ssh") {
+		t.Fatal("the Contact tab should carry the ?ssh claim link")
 	}
 }
 

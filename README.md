@@ -9,8 +9,9 @@ ssh mosambiswas.com     an interactive menu of everything I've built
 curl mosambiswas.com    the résumé, as text
 ```
 
-One small Go binary answers both. Browsers that land on the bare domain are
-sent on to [www.mosambiswas.com](https://www.mosambiswas.com), where the real site lives.
+One small Go binary answers both, **live since 27 September 2026**. Browsers
+that land on the bare domain are sent on to [www.mosambiswas.com](https://www.mosambiswas.com),
+where the real site lives.
 
 </div>
 
@@ -57,14 +58,16 @@ on a thin line of embers.
 |---|---|
 | `curl mosambiswas.com` | the résumé with colour (256 colour escapes, which every modern terminal reads) |
 | `curl mosambiswas.com/plain` | the same with no escapes, for saving to a file |
+| `curl mosambiswas.com/cv` | the same as the first, kept for links from before the server |
 | anything else, from a terminal | a short 404 that points back to the two above |
 
 `wget`, `httpie` and `xh` get the same treatment as `curl`.
 
-### `curl -L mosambiswas.com/cv`, with no server at all
+### The static copy on www
 
-Until this server is running, the same coloured résumé is live on GitHub
-Pages as one static file, `/cv/index.html` in the
+Before this server existed, the curl trick ran on GitHub Pages alone, and that
+copy is still there at `www.mosambiswas.com/cv/`: one static file,
+`/cv/index.html` in the
 [site repo](https://github.com/BiswasMosam/BiswasMosam.github.io). That one
 file reads right in two places:
 
@@ -80,10 +83,9 @@ the raw text and a script that turns the colour codes into styled spans. The
 closing tags are left off on purpose; HTML doesn't need them, and a terminal
 would print them.
 
-`go run . -cv <path>` writes that file (see [`cvpage.go`](cvpage.go)). Its footer
-leaves out `ssh`, which doesn't exist until this server does. A test checks
-that all the markup stays inside the escape sequence, on one line, short
-enough for terminals that cap OSC length.
+`go run . -cv <path>` writes that file (see [`cvpage.go`](cvpage.go)); regenerate it
+whenever the résumé changes. A test checks that all the markup stays inside the
+escape sequence, on one line, short enough for terminals that cap OSC length.
 
 ### `ssh mosambiswas.com`
 
@@ -115,6 +117,14 @@ selecting text to copy it.
 
 `ssh mosambiswas.com resume`, or any SSH session without a terminal (a pipe, a
 script), gets the plain text résumé instead of the app.
+
+### Easter eggs
+
+Both doors are among the [seventeen easter eggs](https://www.mosambiswas.com/help)
+on the site, which a browser keeps count of. A terminal can't reach that count,
+so each hands you a link that claims its egg when opened in a browser: the
+résumé's last line (`/?curl`), and for the app, the Contact tab and the goodbye
+line it leaves in your scrollback (`/?ssh`).
 
 ---
 

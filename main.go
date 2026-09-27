@@ -198,7 +198,10 @@ func goodbye() wish.Middleware {
 	return func(next ssh.Handler) ssh.Handler {
 		return func(s ssh.Session) {
 			p := newPalette(bm.MakeRenderer(s))
-			say(s, "\n  Thanks for stopping by. Say hello: "+p.accent.Render(email)+"\n\n")
+			// Left in the visitor's scrollback after the app closes, so the
+			// claim link for this easter egg is still there to click.
+			say(s, "\n  Thanks for stopping by. Say hello: "+p.accent.Render(email)+
+				"\n  You found an easter egg. Claim it: "+p.accent.Render(sshClaim)+"\n\n")
 			next(s)
 		}
 	}

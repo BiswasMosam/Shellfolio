@@ -33,8 +33,8 @@ func newPalette(r *lipgloss.Renderer) palette {
 func plain(s ...string) string { return strings.Join(s, " ") }
 
 // The rows under the résumé's closing rule, after the PDF, depending on where
-// it is being read. The live server can point at ssh; the static copy on
-// GitHub Pages cannot until the server exists.
+// it is being read: from this server, or from the static /cv/ copy on
+// GitHub Pages (www), which still answers curl -L www.mosambiswas.com/cv.
 var (
 	liveLinks = [][2]string{
 		{"The interactive version", "ssh mosambiswas.com"},
@@ -43,13 +43,16 @@ var (
 	}
 	pageLinks = [][2]string{
 		{"The website", site},
+		{"The interactive version", "ssh mosambiswas.com"},
 		claimLink,
 	}
 
 	// Reading this in a terminal is one of the site's easter eggs. The
 	// tracker lives in the browser, so the terminal hands you a link to
-	// claim it (the homepage counts ?curl as found).
+	// claim it (the homepage counts ?curl as found; the SSH app hands out
+	// ?ssh the same way).
 	claimLink = [2]string{"You found an easter egg. Claim it", site + "/?curl"}
+	sshClaim  = site + "/?ssh"
 )
 
 // resumeText renders the one page résumé as terminal text, at most width

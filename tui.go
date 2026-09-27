@@ -392,6 +392,10 @@ func (m model) contactPage(w int) string {
 	for _, r := range ways {
 		labelled(&b, "  ", 34, w, r[0], r[1], m.p.dim.Render)
 	}
+
+	b.WriteString("\n  " + m.p.accent.Render("You found an easter egg") + "\n\n")
+	para(&b, "  ", w, "This app is one of the site's easter eggs. Open this link in a browser to claim it:", m.p.dim.Render)
+	para(&b, "  ", w, sshClaim, m.p.accent.Render)
 	return b.String()
 }
 
