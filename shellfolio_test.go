@@ -61,6 +61,22 @@ func TestBrowsersAreRedirectedToWWW(t *testing.T) {
 	}
 }
 
+// The site's text files live on www. A terminal asking the bare domain for one
+// must be sent there, not handed the terminal version's 404.
+func TestTerminalsAreSentToTheSitesTextFiles(t *testing.T) {
+	for _, path := range []string{"/llms.txt", "/llms-full.txt", "/humans.txt", "/robots.txt"} {
+		want := "https://www.mosambiswas.com" + path
+		rec := get(t, path, "curl/8.9.1")
+		if rec.Code != http.StatusMovedPermanently || rec.Header().Get("Location") != want {
+			t.Fatalf("%s: got %d %q, want 301 %q", path, rec.Code, rec.Header().Get("Location"), want)
+		}
+		// Without -L, curl prints this body and stops.
+		if !strings.Contains(rec.Body.String(), want) {
+			t.Fatalf("%s: body does not say where the file is: %q", path, rec.Body.String())
+		}
+	}
+}
+
 func TestUnknownTerminalPathIs404(t *testing.T) {
 	if rec := get(t, "/wp-admin", "curl/8.9.1"); rec.Code != http.StatusNotFound {
 		t.Fatalf("status %d", rec.Code)

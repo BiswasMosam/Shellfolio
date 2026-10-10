@@ -21,6 +21,16 @@ func isTerminal(r *http.Request) bool {
 	return terminalClient.MatchString(r.UserAgent())
 }
 
+// Plain text files that live on the website. A terminal asking the bare domain
+// for one is sent on to www like a browser would be, instead of getting the
+// terminal version's 404.
+var siteFiles = map[string]bool{
+	"/llms.txt":      true,
+	"/llms-full.txt": true,
+	"/humans.txt":    true,
+	"/robots.txt":    true,
+}
+
 func webHandler(www string) http.Handler {
 	// 78, not 80: a line that fills the last column wraps twice on some
 	// Windows consoles.
@@ -32,6 +42,16 @@ func webHandler(www string) http.Handler {
 
 		if !isTerminal(r) {
 			http.Redirect(w, r, strings.TrimSuffix(www, "/")+r.URL.RequestURI(), http.StatusMovedPermanently)
+			return
+		}
+
+		// curl without -L prints the body and stops, so the body says where.
+		if siteFiles[r.URL.Path] {
+			to := strings.TrimSuffix(www, "/") + r.URL.RequestURI()
+			w.Header().Set("Location", to)
+			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+			w.WriteHeader(http.StatusMovedPermanently)
+			io.WriteString(w, "\n  "+strings.TrimPrefix(r.URL.Path, "/")+" lives on the website: "+to+"\n\n  curl -L follows it there.\n\n")
 			return
 		}
 

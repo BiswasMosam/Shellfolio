@@ -59,6 +59,7 @@ on a thin line of embers.
 | `curl mosambiswas.com` | the résumé with colour (256 colour escapes, which every modern terminal reads) |
 | `curl mosambiswas.com/plain` | the same with no escapes, for saving to a file |
 | `curl mosambiswas.com/cv` | the same as the first, kept for links from before the server |
+| `/llms.txt`, `/llms-full.txt`, `/humans.txt`, `/robots.txt` | a 301 to the same file on www, with a line saying where it is (`curl -L` follows it) |
 | anything else, from a terminal | a short 404 that points back to the two above |
 
 `wget`, `httpie` and `xh` get the same treatment as `curl`.
@@ -161,7 +162,7 @@ rather than redirecting, because that is what `curl mosambiswas.com` speaks.
 | [`text.go`](text.go) | Renders the résumé as terminal text at any width from 40 to 80 columns. Feeds curl, the Résumé tab, and SSH sessions without a terminal. |
 | [`banner.go`](banner.go) | The five letters of the ANSI Shadow figlet face the name needs, and the colouring that splits blocks from shadow. |
 | [`tui.go`](tui.go) | The Bubble Tea model for the SSH app. |
-| [`web.go`](web.go) | The HTTP handler: terminals get text, everyone else a 301 to www. |
+| [`web.go`](web.go) | The HTTP handler: terminals get text, everyone else a 301 to www. The site's own text files (`siteFiles`) send terminals to www too. |
 | [`cvpage.go`](cvpage.go) | Writes the static `/cv/` page: the résumé for terminals with its HTML hidden in an escape sequence. |
 | [`main.go`](main.go) | Starts the three listeners, the SSH middleware, and a clean shutdown. |
 | [`deploy/shellfolio.service`](deploy/shellfolio.service) | systemd unit: runs as its own user with only `CAP_NET_BIND_SERVICE`, can write nothing but its own folder. |
@@ -216,6 +217,7 @@ go test ./...
 ```
 
 They check that terminals get the résumé and browsers get the exact redirect,
+that terminals asking for `llms.txt` and the other text files are sent to www,
 that `/plain` carries no escapes, that **every line of every tab fits** every
 window from 44 to 140 columns (a line one column too wide wraps in the
 visitor's terminal and the layout falls apart), and that no em or en dash
