@@ -100,7 +100,7 @@ func resumeText(r *lipgloss.Renderer, width int, links [][2]string) string {
 		}
 	}
 	b.WriteString("\n")
-	text(in, "Six of twenty-plus. The rest: "+site+"/#projects", p.dim.Render)
+	text(in, "Seven of twenty-plus. The rest: "+site+"/#projects", p.dim.Render)
 
 	section(&b, p, width, "03", "Research")
 	text(in, research.Title, p.bold.Render)
