@@ -23,7 +23,7 @@ const (
 
 const summary = "A 2026 B.Tech AI & Data Science graduate who builds AI systems and ships " +
 	"them as working software: an AI form-filling Chrome extension, a fully local voice " +
-	"assistant, a mental health platform used by 100+ students, and offline apps for two " +
+	"assistant, a mental health screening platform, and offline apps for two " +
 	"small businesses."
 
 type job struct {
@@ -60,11 +60,11 @@ var resumeWork = []project{
 	{Name: "Locals", Year: "2026", Stack: "Python · Ollama · Agents", URL: github + "/Locals",
 		About: "A town of AI users that test web and Android apps the way real people do: 114 locals from 9 job families, human limits enforced in code, not the prompt, all on a local model."},
 	{Name: "Fill.ai", Year: "2026", Stack: "JS · Chrome MV3 · LLMs", URL: site + "/Fill.ai/",
-		About: "Chrome extension that fills web forms with AI from your resume. Every answer must cite a profile field or it is thrown out; 92-check end-to-end suite, released by CI/CD."},
+		About: "Chrome extension that fills web forms with AI from your resume. Every answer must cite a profile field or it is thrown out; a 121-check end-to-end suite runs on every push, and releases go out through CI/CD."},
 	{Name: "MindFirst", Year: "2025", Stack: "Next.js · Flask · Prisma", URL: github + "/Mind-First",
-		About: "Mental health pre-screening for 100+ students, chatbot + PHQ-9/GAD-7 at 95% accuracy, drop-off cut 30%."},
+		About: "Mental health screening: a GAD-7 style pre-screen run through a Random Forest decides who takes one of 7 condition tests, then hands back self-help and a doctor booking."},
 	{Name: "PixelForge", Year: "2025", Stack: "Python · PyTorch · GANs", URL: github + "/PixelForge",
-		About: "Leukemia cell classification on C-NMC at 0.90 ROC-AUC, 95% recall; a custom spectral-norm GAN augments scarce data."},
+		About: "Leukemia cell classification on C-NMC at 0.89 ROC-AUC, 95% recall; a custom spectral-norm GAN augments scarce data."},
 	{Name: "Pops & Order Control", Year: "2026", Stack: "Flutter · Dart · SQLite",
 		About: "Two offline Android apps for real small businesses: a fabrication firm's order tracker and a food stall order board, on relational SQLite."},
 	{Name: "IntelliStatement", Year: "2025", Stack: "FastAPI · Streamlit · LLM", URL: github + "/LLM-bank-statement-analyzer",
@@ -81,16 +81,16 @@ var portfolio = []project{
 		About: "A small town of AI users on your own machine. Each local has a job and a workday, uses web apps in a real browser and Android apps on an emulator, and says where they got stuck. Human limits are enforced in code, not the prompt. 114 draft locals from 9 job families, all on a small local model.",
 		URL:   github + "/Locals"},
 	{Name: "Fill.ai", Tagline: "AI form-filling Chrome extension", Year: "2026", Badge: "Install",
-		Stack: "JS · Chrome MV3 · LLMs", Stat: "92", StatFor: "end-to-end checks, every answer must cite your profile or it is thrown out",
-		About: "Fills web forms from your resume. It learns from what you type, handles Google Forms and Select2, and refuses to invent: an answer with no profile field behind it never reaches the page. Released by CI/CD.",
+		Stack: "JS · Chrome MV3 · LLMs", Stat: "121", StatFor: "end-to-end checks, run on every push, uncited answers are thrown out",
+		About: "Fills web forms from your resume. It learns from what you type, handles Google Forms and Select2, and refuses to invent: an answer with no profile field behind it never reaches the page. 121 end-to-end checks in Chrome on every push; released by CI/CD.",
 		URL:   site + "/Fill.ai/"},
 	{Name: "MindFirst", Tagline: "Mental-health screening platform", Year: "2025",
-		Stack: "Next.js · Flask · Prisma", Stat: "95%", StatFor: "screening accuracy, chatbot + psychometrics for 100+ students",
-		About: "Mental health pre-screening for 100+ students: a chatbot plus PHQ-9 and GAD-7 at 95% accuracy, and 30% fewer people dropping off halfway.",
+		Stack: "Next.js · Flask · Prisma", Stat: "7", StatFor: "condition tests, a GAD-7 style pre-screen decides who needs one",
+		About: "Mental health screening that starts before anyone knows what is wrong: a GAD-7 style pre-screen goes through a Random Forest, seven condition tests narrow it down, and the results hand back self-help and a doctor booking.",
 		URL:   github + "/Mind-First"},
 	{Name: "PixelForge", Tagline: "Medical imaging with CNNs & GANs", Year: "2025",
-		Stack: "PyTorch · GANs", Stat: "0.90", StatFor: "ROC-AUC on leukemia detection, custom GAN augments scarce data",
-		About: "Leukemia cell classification on C-NMC at 0.90 ROC-AUC and 95% recall. Labelled cells are scarce, so a custom spectral-norm GAN makes more.",
+		Stack: "PyTorch · GANs", Stat: "0.89", StatFor: "ROC-AUC on leukemia detection, custom GAN augments scarce data",
+		About: "Leukemia cell classification on C-NMC at 0.89 ROC-AUC and 95% recall. Labelled cells are scarce, so a custom spectral-norm GAN makes more.",
 		URL:   github + "/PixelForge"},
 	{Name: "PixelShift", Tagline: "In-browser batch image converter", Year: "2025", Badge: "Live",
 		Stack: "Vanilla JS · Canvas", Stat: "Zero", StatFor: "uploads, batch image conversion entirely in the browser",
@@ -109,7 +109,7 @@ var portfolio = []project{
 		About: "A native Android app for running college committees, built by a team of four as a RAIT mini project, with Firebase Realtime Database for sync.",
 		URL:   github + "/CommitteesManagement"},
 	{Name: "Sim Sim", Tagline: "Voice-driven AI desktop assistant", Year: "2024",
-		Stack: "Python · PySide6", Stat: "70%", StatFor: "faster task execution, voice commands plus a conversational GUI",
+		Stack: "Python · PySide6", Stat: "23", StatFor: "voice commands, alarms, news, WhatsApp and games in a PySide6 GUI",
 		About: "An AI desktop assistant you can talk to or type at: voice commands for the quick things, a conversational GUI for the rest.",
 		URL:   github + "/SimSim-Virtual-Assistant"},
 	{Name: "Flex Card", Tagline: "Hardware-spec card generator", Year: "2024",
