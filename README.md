@@ -4,6 +4,8 @@
 
 **My portfolio, for people who live in a terminal.**
 
+[![Tests](https://github.com/BiswasMosam/Shellfolio/actions/workflows/tests.yml/badge.svg)](https://github.com/BiswasMosam/Shellfolio/actions/workflows/tests.yml)
+
 ```
 ssh mosambiswas.com     an interactive menu of everything I've built
 curl mosambiswas.com    the résumé, as text
@@ -216,7 +218,8 @@ The first run writes an SSH host key to `.ssh/id_ed25519`. It is gitignored.
 go test ./...
 ```
 
-They check that terminals get the résumé and browsers get the exact redirect,
+GitHub runs them on every push (`.github/workflows/tests.yml`), along with
+`go vet` and the Linux build the server runs. They check that terminals get the résumé and browsers get the exact redirect,
 that terminals asking for `llms.txt` and the other text files are sent to www,
 that `/plain` carries no escapes, that **every line of every tab fits** every
 window from 44 to 140 columns (a line one column too wide wraps in the

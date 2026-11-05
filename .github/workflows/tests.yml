@@ -1,0 +1,22 @@
+# Vets and tests the server on every push and pull request, then makes sure
+# the Linux build the VPS runs still compiles.
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - run: go vet ./...
+      - run: go test -v ./...
+      - run: GOOS=linux GOARCH=amd64 go build -o /tmp/shellfolio-linux-amd64 .
