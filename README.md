@@ -62,6 +62,7 @@ on a thin line of embers.
 | `curl mosambiswas.com/plain` | the same with no escapes, for saving to a file |
 | `curl mosambiswas.com/cv` | the same as the first, kept for links from before the server |
 | `/llms.txt`, `/llms-full.txt`, `/humans.txt`, `/robots.txt` | a 301 to the same file on www, with a line saying where it is (`curl -L` follows it) |
+| `curl mosambiswas.com/pet` | my desk pet, one frame of it, doing what I am doing (see the Pet tab below). A browser asking for `/pet` is sent to the pet's handbook |
 | anything else, from a terminal | a short 404 that points back to the two above |
 
 `wget`, `httpie` and `xh` get the same treatment as `curl`.
@@ -92,7 +93,7 @@ escape sequence, on one line, short enough for terminals that cap OSC length.
 
 ### `ssh mosambiswas.com`
 
-A full-screen app with four tabs:
+A full-screen app with five tabs:
 
 | Tab | What is on it |
 |---|---|
@@ -100,20 +101,38 @@ A full-screen app with four tabs:
 | **2 About** | The homepage's about section, the numbers, and the IEEE paper. |
 | **3 Résumé** | The same text `curl` gets, scrollable. |
 | **4 Contact** | Email, links, and what time it is in Navi Mumbai right now. |
+| **5 Pet** | My [desk pet](https://www.mosambiswas.com/Desktop-pet/), live, drawn in braille. It codes, games, dances to music or eats popcorn through a film when I do, a few minutes behind, and sleeps when I am away. `space` pets it. |
 
 | Keys | |
 |---|---|
-| `←` `→` · `tab` · `1` to `4` | switch tabs |
+| `←` `→` · `tab` · `1` to `5` | switch tabs |
 | `↑` `↓` · `j` `k` | choose a project, or scroll |
 | `g` `G` · `home` `end` | top, bottom |
 | `enter` · `esc` | open a project, back (narrow terminals) |
 | `c` | copy the project's link, or my email on Contact, to **your** clipboard |
+| `space` | pet the pet (three quick ones and it falls for you) |
 | `q` | leave |
 
 Copying works over SSH through OSC 52: the app sends the text inside an escape
 sequence and your terminal puts it on your local clipboard. Windows Terminal,
 iTerm2, kitty, WezTerm and Alacritty do this; terminals that don't simply
 ignore it. tmux and screen are detected and wrapped.
+
+### The pet
+
+The face on the Pet tab is the desk pet's firmware
+([Desktop-pet](https://github.com/BiswasMosam/Desktop-pet), `face.cpp` and its
+props) ported to Go line by line, down to the Adafruit GFX routines that draw
+its rounded eyes, so it glances, blinks, fidgets and eases exactly as the one
+on my desk does. Braille characters hold two by four pixels each, so the whole
+128 by 64 screen fits in 64 columns by 16 rows with nothing lost.
+
+What it does comes from the PC beside the real pet, which reports one mood:
+code or a game in front, music or a film playing, at the desk, or away. Never
+a window title, a song or a program's name. A change is sent at most every
+five minutes, and twenty minutes of silence reads as away. The report carries
+a key that only that PC holds; the server keeps just the key's SHA-256
+(`petKeySHA256` in [`pet.go`](pet.go)), so publishing it gives nothing away.
 
 The app is keyboard only on purpose. Capturing the mouse would stop you from
 selecting text to copy it.
@@ -164,6 +183,9 @@ rather than redirecting, because that is what `curl mosambiswas.com` speaks.
 | [`text.go`](text.go) | Renders the résumé as terminal text at any width from 40 to 80 columns. Feeds curl, the Résumé tab, and SSH sessions without a terminal. |
 | [`banner.go`](banner.go) | The five letters of the ANSI Shadow figlet face the name needs, and the colouring that splits blocks from shadow. |
 | [`tui.go`](tui.go) | The Bubble Tea model for the SSH app. |
+| [`pet.go`](pet.go) | The Pet tab, `curl /pet`, and the report the PC sends (`POST /pet`, key checked by hash, one mood and nothing else). |
+| [`petface.go`](petface.go) | The desk pet's face and props, ported from its firmware. |
+| [`gfx.go`](gfx.go) | A 128x64 one bit screen with the Adafruit GFX shapes the firmware uses, and the braille that draws it. |
 | [`web.go`](web.go) | The HTTP handler: terminals get text, everyone else a 301 to www. The site's own text files (`siteFiles`) send terminals to www too. |
 | [`cvpage.go`](cvpage.go) | Writes the static `/cv/` page: the résumé for terminals with its HTML hidden in an escape sequence. |
 | [`main.go`](main.go) | Starts the three listeners, the SSH middleware, and a clean shutdown. |
@@ -176,6 +198,7 @@ Anyone can connect, so the SSH side is built for strangers:
 - **No shell, ever.** Every session runs the portfolio app or prints text. There is nothing else to reach.
 - **No login.** No passwords or keys are asked for, and none are stored.
 - **Rate limited** per IP (one new session every 2 seconds, bursts of 5), **capped** at 64 open sessions, closed after 15 idle minutes and at most an hour.
+- **One way in that is not for visitors:** `POST /pet`, which takes a mood from the PC beside the desk pet. It needs a key only that PC holds (compared by hash, in constant time), only over HTTPS, at most 64 bytes, and one of eight fixed moods. Anything else is refused and changes nothing.
 - **Unprivileged.** The service holds exactly one capability, binding low ports. The filesystem is read-only to it apart from `/var/lib/shellfolio`.
 
 ---
@@ -211,6 +234,7 @@ The first run writes an SSH host key to `.ssh/id_ed25519`. It is gitignored.
 | `-www` | `https://www.mosambiswas.com` | where browsers are sent |
 | `-max-sessions` | `64` | SSH sessions open at once |
 | `-cv` | | write the static `/cv/` page to this path and exit, instead of serving |
+| `-pet-key` | `petKeySHA256` | SHA-256 in hex of the key the pet's PC reports with. Empty turns the reports off |
 
 ### Tests
 
@@ -223,8 +247,10 @@ GitHub runs them on every push (`.github/workflows/tests.yml`), along with
 that terminals asking for `llms.txt` and the other text files are sent to www,
 that `/plain` carries no escapes, that **every line of every tab fits** every
 window from 44 to 140 columns (a line one column too wide wraps in the
-visitor's terminal and the layout falls apart), and that no em or en dash
-appears anywhere in the copy.
+visitor's terminal and the layout falls apart), that no em or en dash
+appears anywhere in the copy, and that the pet's report door takes only the
+right key over HTTPS with one of its moods, goes to sleep when the PC goes
+quiet, and runs five minutes of every mood without drawing off the screen.
 
 ---
 
@@ -319,7 +345,8 @@ site does.
 [Bubble Tea](https://github.com/charmbracelet/bubbletea) (the TUI) ·
 [Lip Gloss](https://github.com/charmbracelet/lipgloss) (styling) ·
 [Bubbles](https://github.com/charmbracelet/bubbles) (the scrolling pages) ·
-`golang.org/x/crypto/acme/autocert` (certificates)
+`golang.org/x/crypto/acme/autocert` (certificates) ·
+[Adafruit GFX](https://github.com/adafruit/Adafruit-GFX-Library) (the pet's shapes, ported; BSD licence)
 
 <div align="center">
 

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/termenv"
@@ -39,6 +40,19 @@ func webHandler(www string) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Vary", "User-Agent")
+
+		// The pet lives on the site as its handbook; a terminal gets the pet.
+		pet := strings.TrimSuffix(r.URL.Path, "/") == "/pet"
+		if pet && !isTerminal(r) {
+			http.Redirect(w, r, strings.TrimSuffix(www, "/")+"/Desktop-pet/", http.StatusFound)
+			return
+		}
+		if pet {
+			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+			w.Header().Set("Cache-Control", "no-store")
+			io.WriteString(w, petText(time.Now()))
+			return
+		}
 
 		if !isTerminal(r) {
 			http.Redirect(w, r, strings.TrimSuffix(www, "/")+r.URL.RequestURI(), http.StatusMovedPermanently)

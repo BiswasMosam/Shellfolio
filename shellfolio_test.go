@@ -1,10 +1,14 @@
 package main
 
 import (
+	"crypto/sha256"
+	"crypto/tls"
+	"encoding/hex"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/charmbracelet/x/ansi"
 	"github.com/muesli/termenv"
@@ -165,7 +169,161 @@ func TestNoDashesInCopy(t *testing.T) {
 	for _, p := range portfolio {
 		text += m.detail(p, 60)
 	}
+	for _, w := range petMoods {
+		text += petCaption(w)
+	}
+	text += petText(time.Now()) + m.switchTo(tabPet).petPage(80, 30)
 	if i := strings.IndexAny(text, "—–"); i >= 0 {
 		t.Fatalf("dash found near %q", text[max(i-30, 0):min(i+30, len(text))])
+	}
+}
+
+// ---------- the pet ----------
+
+// Every mood the bridge can report, and the stale one.
+var petMoods = []petWorld{
+	{}, {act: "code"}, {act: "code", media: "music"}, {act: "game"},
+	{act: "game", media: "music"}, {media: "music"}, {media: "watch"}, {away: true},
+}
+
+func postPet(t *testing.T, h http.Handler, auth, body string, overTLS bool) int {
+	t.Helper()
+	req := httptest.NewRequest(http.MethodPost, "/pet", strings.NewReader(body))
+	if auth != "" {
+		req.Header.Set("Authorization", auth)
+	}
+	if overTLS {
+		req.TLS = &tls.ConnectionState{}
+	}
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	return rec.Code
+}
+
+// The pet tab is public, so the only way in is the bridge's key, over
+// https, carrying one of the moods and nothing else.
+func TestPetTakesAMoodOnlyFromItsKey(t *testing.T) {
+	petLatest.Store(nil)
+	t.Cleanup(func() { petLatest.Store(nil) })
+	sum := sha256.Sum256([]byte("k3y"))
+	h := withPetBeacon(webHandler("https://www.mosambiswas.com"), sum[:], true)
+
+	for _, c := range []struct {
+		auth, body string
+		tls        bool
+		want       int
+	}{
+		{"", "code -", true, http.StatusUnauthorized},
+		{"Bearer nope", "code -", true, http.StatusUnauthorized},
+		{"k3y", "code -", true, http.StatusUnauthorized}, // no Bearer
+		{"Bearer k3y", "code -", false, http.StatusForbidden},
+		{"Bearer k3y", "Visual Studio Code - secret.py", true, http.StatusBadRequest},
+		{"Bearer k3y", "code music now", true, http.StatusBadRequest},
+		{"Bearer k3y", strings.Repeat("a", 65), true, http.StatusRequestEntityTooLarge},
+	} {
+		if got := postPet(t, h, c.auth, c.body, c.tls); got != c.want {
+			t.Fatalf("%q %q tls=%v: got %d, want %d", c.auth, c.body, c.tls, got, c.want)
+		}
+	}
+	if petLatest.Load() != nil {
+		t.Fatal("a refused report must change nothing")
+	}
+
+	if got := postPet(t, h, "Bearer k3y", "code music", true); got != http.StatusNoContent {
+		t.Fatalf("the right key: got %d", got)
+	}
+	if w := petMood(time.Now()); w != (petWorld{act: "code", media: "music"}) {
+		t.Fatalf("mood after the report: %+v", w)
+	}
+}
+
+// Twenty minutes with nothing from the PC is a PC that is off: the pet
+// must not go on claiming he is coding.
+func TestPetGoesAwayWhenThePCGoesQuiet(t *testing.T) {
+	t.Cleanup(func() { petLatest.Store(nil) })
+	now := time.Now()
+	petLatest.Store(nil)
+	if !petMood(now).away {
+		t.Fatal("no report yet should be away")
+	}
+	petLatest.Store(&petReport{world: petWorld{act: "game"}, at: now.Add(-5 * time.Minute)})
+	if petMood(now).act != "game" {
+		t.Fatal("a five minute old report still holds")
+	}
+	if !petMood(now.Add(16 * time.Minute)).away {
+		t.Fatal("past twenty minutes it should be away")
+	}
+}
+
+// A hash that does not parse turns the reports off rather than open, and
+// the one compiled in must parse, or the live pet never hears the PC.
+func TestPetKeyHash(t *testing.T) {
+	if petKeyHash(petKeySHA256) == nil {
+		t.Fatal("petKeySHA256 is not a SHA-256 in hex")
+	}
+	for _, bad := range []string{"", "zz", hex.EncodeToString([]byte("short"))} {
+		if petKeyHash(bad) != nil {
+			t.Fatalf("%q should turn the reports off", bad)
+		}
+	}
+	h := withPetBeacon(webHandler("https://www.mosambiswas.com"), nil, true)
+	if got := postPet(t, h, "Bearer anything", "code -", true); got != http.StatusNotFound {
+		t.Fatalf("with no hash: got %d, want 404", got)
+	}
+}
+
+// curl gets one frame that fits the terminal; a browser gets the handbook.
+func TestCurlGetsThePet(t *testing.T) {
+	rec := get(t, "/pet", "curl/8.9.1")
+	if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), "ssh mosambiswas.com") {
+		t.Fatalf("got %d %q", rec.Code, rec.Body.String())
+	}
+	if !strings.ContainsRune(rec.Body.String(), 0x28ff) && !strings.ContainsAny(rec.Body.String(), "⣿⣶⣤") {
+		t.Fatal("no face in the body")
+	}
+	for i, line := range strings.Split(rec.Body.String(), "\n") {
+		if w := ansi.StringWidth(line); w > 78 {
+			t.Fatalf("line %d is %d wide", i+1, w)
+		}
+	}
+	agent := "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/140.0"
+	rec = get(t, "/pet", agent)
+	if rec.Code != http.StatusFound || rec.Header().Get("Location") != "https://www.mosambiswas.com/Desktop-pet/" {
+		t.Fatalf("browser: got %d %q", rec.Code, rec.Header().Get("Location"))
+	}
+}
+
+// A 24 row terminal leaves 17 rows for the page: the whole face and the
+// line that says what he is doing must both be there.
+func TestPetTabFitsASmallTerminal(t *testing.T) {
+	petLatest.Store(&petReport{world: petWorld{act: "code"}, at: time.Now()})
+	t.Cleanup(func() { petLatest.Store(nil) })
+	for _, size := range [][2]int{{80, 24}, {minWidth, 24}, {100, 40}} {
+		m := newModel(renderer(termenv.Ascii), func(string) {})
+		m.width, m.height = size[0], size[1]
+		m = m.switchTo(tabPet)
+		m.pet.advance(100)
+		view := m.View()
+		if !strings.Contains(view, "Writing code.") {
+			t.Fatalf("%dx%d: the caption is missing", size[0], size[1])
+		}
+		if n := strings.Count(view, "\n") + 1; n > size[1] {
+			t.Fatalf("%dx%d: %d lines", size[0], size[1], n)
+		}
+	}
+}
+
+// Five minutes of every mood, petted now and then: nothing the firmware's
+// shapes do may ever fall off the screen and panic.
+func TestPetRunsEveryMood(t *testing.T) {
+	for _, w := range petMoods {
+		p := newPetFace(7, time.Now)
+		p.world = w
+		for i := 0; i < 15000; i++ {
+			if i%700 == 0 {
+				p.touch()
+			}
+			p.advance(1)
+		}
 	}
 }

@@ -43,6 +43,7 @@ func main() {
 		www       = flag.String("www", "https://www.mosambiswas.com", "where browsers are redirected")
 		maxConns  = flag.Int("max-sessions", 64, "most SSH sessions open at once")
 		cvOut     = flag.String("cv", "", "write the static /cv/ page (terminal and browser in one file) to this path, then exit")
+		petKey    = flag.String("pet-key", petKeySHA256, "SHA-256 (hex) of the key the desk pet's bridge reports its mood with. Empty turns the reports off")
 	)
 	flag.Parse()
 
@@ -62,7 +63,7 @@ func main() {
 		log.Fatal("ssh server", "err", err)
 	}
 
-	web := webHandler(*www)
+	web := withPetBeacon(webHandler(*www), petKeyHash(*petKey), *httpsAddr != "")
 	var servers []*http.Server
 	if *httpsAddr != "" {
 		if *domain == "" {

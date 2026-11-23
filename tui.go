@@ -11,17 +11,18 @@ import (
 	"github.com/charmbracelet/x/ansi"
 )
 
-// The SSH app: four tabs across the top, the work list as a menu, and the
-// rest as scrollable pages. Keyboard only, so visitors can still select text
-// with the mouse to copy it.
+// The SSH app: five tabs across the top, the work list as a menu, the
+// desk pet live, and the rest as scrollable pages. Keyboard only, so
+// visitors can still select text with the mouse to copy it.
 
-var tabs = []string{"Work", "About", "Résumé", "Contact"}
+var tabs = []string{"Work", "About", "Résumé", "Contact", "Pet"}
 
 const (
 	tabWork = iota
 	tabAbout
 	tabResume
 	tabContact
+	tabPet
 )
 
 const (
@@ -52,6 +53,9 @@ type model struct {
 
 	toast   string
 	toastID int
+
+	pet    *petFace // made the first time the tab opens
+	petGen int      // ticks from an earlier visit to the tab are dropped
 }
 
 func newModel(r *lipgloss.Renderer, copy func(string)) model {
@@ -84,6 +88,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 
+	case petTickMsg:
+		if int(msg) != m.petGen || m.tab != tabPet {
+			return m, nil // left the tab; this chain of ticks ends here
+		}
+		m.pet.world = petMood(time.Now())
+		m.pet.advance(petFrames)
+		return m, petTick(m.petGen)
+
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c", "q":
@@ -97,13 +109,20 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, tea.Quit
 			}
 		case "right", "l", "tab":
-			return m.switchTo((m.tab + 1) % len(tabs)), nil
+			return m.enter((m.tab + 1) % len(tabs))
 		case "left", "h", "shift+tab":
-			return m.switchTo((m.tab + len(tabs) - 1) % len(tabs)), nil
-		case "1", "2", "3", "4":
-			return m.switchTo(int(msg.String()[0] - '1')), nil
+			return m.enter((m.tab + len(tabs) - 1) % len(tabs))
+		case "1", "2", "3", "4", "5":
+			return m.enter(int(msg.String()[0] - '1'))
 		case "c", "y":
 			return m.copyCurrent()
+		}
+
+		if m.tab == tabPet {
+			if s := msg.String(); s == " " || s == "enter" || s == "p" {
+				m.pet.touch()
+			}
+			return m, nil
 		}
 
 		if m.tab == tabWork {
@@ -139,8 +158,24 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m model) switchTo(t int) model {
 	m.tab, m.open = t, false
+	if t == tabPet {
+		if m.pet == nil {
+			m.pet = newPetFace(uint64(time.Now().UnixNano()), time.Now)
+		}
+		m.pet.world = petMood(time.Now())
+		m.petGen++
+	}
 	m.fill(true)
 	return m
+}
+
+// enter switches tab and, for the pet, starts its frames.
+func (m model) enter(t int) (tea.Model, tea.Cmd) {
+	m = m.switchTo(t)
+	if t == tabPet {
+		return m, petTick(m.petGen)
+	}
+	return m, nil
 }
 
 func (m model) copyCurrent() (tea.Model, tea.Cmd) {
@@ -202,6 +237,8 @@ func (m model) View() string {
 		body = cut(m.detail(portfolio[m.cursor], w-4), m.bodyHeight(), "  ")
 	case m.tab == tabWork:
 		body = m.workList(w)
+	case m.tab == tabPet:
+		body = m.petPage(w, m.bodyHeight())
 	default:
 		body = m.vp.View()
 	}
@@ -222,12 +259,21 @@ func (m model) header(w int) string {
 	return line1 + "\n" + ansi.Truncate("  "+m.p.dim.Render(role), w, "")
 }
 
+// tabBar names every tab when there is room, and only the open one when
+// there is not (a phone's terminal), so the smallest window stays usable.
 func (m model) tabBar(w int) string {
+	full := 2 + 3*(len(tabs)-1)
+	for i, t := range tabs {
+		full += ansi.StringWidth(fmt.Sprintf("%d %s", i+1, t))
+	}
 	var labels, under strings.Builder
 	labels.WriteString("  ")
 	under.WriteString(m.p.dim.Render("──"))
 	for i, t := range tabs {
 		label := fmt.Sprintf("%d %s", i+1, t)
+		if full > w && i != m.tab {
+			label = fmt.Sprintf("%d", i+1)
+		}
 		if i == m.tab {
 			labels.WriteString(m.p.accent.Bold(true).Render(label))
 			under.WriteString(m.p.accent.Render(strings.Repeat("━", ansi.StringWidth(label))))
@@ -258,6 +304,8 @@ func (m model) footer(w int) string {
 		keys += "↑↓ choose  c copy link"
 	case m.tab == tabContact:
 		keys += "↑↓ scroll  c copy email"
+	case m.tab == tabPet:
+		keys += "space pet it"
 	default:
 		keys += "↑↓ scroll"
 	}
@@ -266,7 +314,7 @@ func (m model) footer(w int) string {
 	right := ""
 	if m.toast != "" {
 		right = m.p.accent.Render(m.toast) + "  "
-	} else if m.tab != tabWork && m.vp.TotalLineCount() > m.vp.Height {
+	} else if m.tab != tabWork && m.tab != tabPet && m.vp.TotalLineCount() > m.vp.Height {
 		right = m.p.dim.Render(fmt.Sprintf("%3.f%%", m.vp.ScrollPercent()*100)) + "  "
 	}
 	if ansi.StringWidth(keys)+ansi.StringWidth(right)+4 > w {
