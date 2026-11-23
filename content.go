@@ -58,17 +58,17 @@ var resumeWork = []project{
 	{Name: "AMINAL", Year: "2026", Stack: "Python · Whisper · Ollama", URL: github + "/Aminal-Public",
 		About: "Local-first voice assistant for Windows: speech, LLM intent, vision and text-to-speech fully on-device. 29K lines of Python, 125 commands, 849 tests."},
 	{Name: "Locals", Year: "2026", Stack: "Python · Ollama · Agents", URL: site + "/Locals/",
-		About: "A town of AI users that test web and Android apps the way real people do: 114 locals from 9 job families, human limits enforced in code, not the prompt, all on a local model."},
+		About: "A town of AI users that test web and Android apps the way real people do: 114 locals from 9 job families, human limits enforced in code, not the prompt. Two-stage agents finish 83% of tasks, close to the 78% real people manage, on a 4B local model."},
 	{Name: "Fill.ai", Year: "2026", Stack: "JS · Chrome MV3 · LLMs", URL: site + "/Fill.ai/",
 		About: "Chrome extension that fills web forms with AI from your resume. Every answer must cite a profile field or it is thrown out; a 121-check end-to-end suite runs on every push, and releases go out through CI/CD."},
 	{Name: "MindFirst", Year: "2025", Stack: "Next.js · Flask · Prisma", URL: github + "/Mind-First",
 		About: "Mental health screening: a GAD-7 style pre-screen run through a Random Forest decides who takes one of 7 condition tests, then hands back self-help and a doctor booking."},
+	{Name: "Pops & Order Control", Year: "2026", Stack: "Flutter · Dart · SQLite",
+		About: "Two offline Android apps for real small businesses: an order tracker that replaced a fabrication firm's paper diary, and a food stall order board on transactional SQLite with 13 unit tests."},
+	{Name: "Shellfolio", Year: "2026", Stack: "Go · SSH · Linux", URL: github + "/Shellfolio",
+		About: "This portfolio in a terminal: ssh mosambiswas.com. One Go binary on a Linux VPS with auto-renewed TLS, per-IP rate limiting, session caps and a least-privilege systemd service."},
 	{Name: "PixelForge", Year: "2025", Stack: "Python · PyTorch · GANs", URL: github + "/PixelForge",
 		About: "Leukemia cell classification on C-NMC at 0.89 ROC-AUC, 95% recall; a custom spectral-norm GAN augments scarce data."},
-	{Name: "Pops & Order Control", Year: "2026", Stack: "Flutter · Dart · SQLite",
-		About: "Two offline Android apps for real small businesses: a fabrication firm's order tracker and a food stall order board, on relational SQLite."},
-	{Name: "IntelliStatement", Year: "2025", Stack: "FastAPI · Streamlit · LLM", URL: github + "/LLM-bank-statement-analyzer",
-		About: "Bank statement analyzer, LLM extraction from PDFs and images into structured data, insights via FastAPI + Streamlit."},
 }
 
 var portfolio = []project{
@@ -105,7 +105,7 @@ var portfolio = []project{
 		About: "Reads bank statements from PDFs and photos, pulls every transaction into structured data with an LLM, then charts where the money went.",
 		URL:   github + "/LLM-bank-statement-analyzer"},
 	{Name: "Committee Connect", Tagline: "Android app for college committees", Year: "2024",
-		Stack: "Android · Java · Firebase", Stat: "Team", StatFor: "a four-person RAIT mini project, synced over Firebase",
+		Stack: "Android · Java · Firebase", Stat: "4", StatFor: "built by a team of four, real-time Firebase sync for committees",
 		About: "A native Android app for running college committees, built by a team of four as a RAIT mini project, with Firebase Realtime Database for sync.",
 		URL:   github + "/CommitteesManagement"},
 	{Name: "Sim Sim", Tagline: "Voice-driven AI desktop assistant", Year: "2024",
@@ -149,11 +149,11 @@ type skill struct {
 }
 
 var stack = []skill{
-	{"Languages", "Python, Java, JavaScript, TypeScript, Dart, SQL, C++, C, HTML/CSS"},
-	{"AI / ML", "PyTorch, TensorFlow, scikit-learn, XGBoost, LightGBM, SHAP, OpenCV, LLMs (OpenAI, Gemini, Claude, Ollama)"},
+	{"Languages", "Python, JavaScript, TypeScript, Java, Dart, Go, SQL, C++, C, HTML/CSS"},
+	{"AI / ML & LLMs", "PyTorch, TensorFlow, scikit-learn, XGBoost, LightGBM, SHAP, OpenCV, GANs, LLM Agents, Ollama, OpenAI / Gemini / Claude APIs, Whisper, Local LLM Inference, Structured Outputs (JSON Schema)"},
 	{"Backend & Web", "FastAPI, Flask, Node.js, Express.js, Next.js, React, Angular, REST APIs, WebSockets, Chrome Extensions"},
-	{"Mobile & DB", "Flutter, Android (Java), Firebase, MySQL, PostgreSQL, MongoDB, SQLite"},
-	{"Tools", "Git, GitHub Actions (CI/CD), AWS, Pandas, Postman, Google OR-Tools, Unit & E2E Testing, Agile/Scrum"},
+	{"Mobile & Data", "Flutter, Android (Java), SQLite, MySQL, PostgreSQL, MongoDB, Firebase, Prisma, Pandas, Streamlit"},
+	{"DevOps & Practices", "Git, GitHub Actions (CI/CD), Linux, AWS, Unit & E2E Testing, Postman, Agile/Scrum"},
 }
 
 var leadership = []string{

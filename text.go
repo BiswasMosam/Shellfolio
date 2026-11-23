@@ -114,12 +114,21 @@ func resumeText(r *lipgloss.Renderer, width int, links [][2]string) string {
 	text(in, education.Detail, p.dim.Render)
 
 	section(&b, p, width, "05", "Stack")
-	const label = 15
+	const label = 16
 	for _, s := range stack {
-		for i, l := range wrap(s.Items, inner-label) {
+		// A group name longer than the column wraps onto its own lines (as
+		// "DevOps & Practices" does on the site) instead of pushing its
+		// items out of line with every other row. Two spaces always follow it.
+		heads := wrap(s.Group, label-2)
+		items := wrap(s.Items, inner-label)
+		for i := range max(len(heads), len(items)) {
 			head := strings.Repeat(" ", label)
-			if i == 0 {
-				head = p.dim.Render(pad(s.Group, label))
+			if i < len(heads) {
+				head = p.dim.Render(pad(heads[i], label))
+			}
+			l := ""
+			if i < len(items) {
+				l = items[i]
 			}
 			b.WriteString(in + head + l + "\n")
 		}
